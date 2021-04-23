@@ -3,6 +3,7 @@ import {
   Controller,
   Delete,
   Get,
+  NotFoundException,
   Param,
   ParseIntPipe,
   Post,
@@ -31,10 +32,10 @@ export class CatsController {
   }
 
   @Get(':id')
-  async findOne(
-    @Param('id', ParseIntPipe) id: number,
-  ): Promise<Cat | undefined> {
-    return this.catsService.find(id);
+  async findOne(@Param('id', ParseIntPipe) id: number): Promise<Cat> {
+    const result = this.catsService.find(id);
+    if (result === undefined) throw new NotFoundException();
+    return result;
   }
 
   @Put(':id')
@@ -44,20 +45,14 @@ export class CatsController {
   ): Promise<string> {
     const catToUpdate = { id: id, ...updateCatDto };
     const result = this.catsService.update(catToUpdate);
-    if (result) {
-      return `Cat with id ${id} was updated: ${JSON.stringify(catToUpdate)}`;
-    } else {
-      return `Cat with id ${id} could not be found.`;
-    }
+    if (!result) throw new NotFoundException();
+    return `Cat with id ${id} was updated: ${JSON.stringify(catToUpdate)}`;
   }
 
   @Delete(':id')
   async remove(@Param('id', ParseIntPipe) id: number): Promise<string> {
     const result = this.catsService.delete(id);
-    if (result) {
-      return `Cat with id ${id} was removed.`;
-    } else {
-      return `Cat with id ${id} could not be found.`;
-    }
+    if (!result) throw new NotFoundException();
+    return `Cat with id ${id} was removed.`;
   }
 }
